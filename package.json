@@ -1,0 +1,30 @@
+{
+  "name": "ai-video-editor",
+  "version": "1.0.0",
+  "description": "AI-powered video supercut generator using ShotAI semantic search + Remotion rendering",
+  "main": "index.js",
+  "scripts": {
+    "skill": "tsx src/skill/cli.ts",
+    "make-video": "tsx src/make-video.ts",
+    "make-city": "tsx src/make-city-remixes.ts",
+    "studio": "npx remotion studio src/remotion/index.tsx",
+    "render": "npx remotion render src/remotion/index.tsx Supercut"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@remotion/cli": "^4.0.431",
+    "@remotion/renderer": "^4.0.431",
+    "@remotion/transitions": "4.0.431",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "dotenv": "^17.3.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "remotion": "^4.0.431",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

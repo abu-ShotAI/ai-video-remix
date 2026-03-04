@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Environment (never commit real tokens)
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+
+# Video output (large files, user-specific)
+output/
+*.mp4
+*.mov
+*.webm
+
+# ffmpeg temp files
+*.ts.tmp
+
+# macOS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+
+# Remotion
+.remotion/
