@@ -59,19 +59,20 @@ const cyberpunkMeta: CompositionMeta = {
   description: '扫描线叠加 + 故障闪烁 + 霓虹发光城市名标题，适合夜晚都市/科技感主题',
   musicStyle:  'cyberpunk electronic synthwave dark neon city',
   shotSlots: [
-    { query: '霓虹灯夜街反光',     mood: 'urban' },
-    { query: '维多利亚港夜景灯光', mood: 'urban' },
-    { query: '香港夜市人流招牌',   mood: 'urban' },
-    { query: '城市天际线夜晚',     mood: 'urban' },
-    { query: '玻璃幕墙霓虹倒影',   mood: 'urban' },
-    { query: '密集高楼灯光',       mood: 'urban' },
+    { query: 'neon lights wet street reflection night',  mood: 'urban' },
+    { query: 'Victoria Harbour night skyline lights',    mood: 'urban' },
+    { query: 'Hong Kong night market signs crowd neon',  mood: 'urban' },
+    { query: 'city skyline night buildings lights',      mood: 'urban' },
+    { query: 'glass facade neon reflection city night',  mood: 'urban' },
+    { query: 'dense skyscrapers lights high-rise night', mood: 'urban' },
   ],
   buildProps(clips, title, bgm, showAttribution = true) {
     return {
       fps:      30,
       cityName: title,
+      subtitle: 'CITY PULSE',
+      tagline:  showAttribution ? 'ShotAI Search · Remotion Render' : undefined,
       bgm,
-      attribution: showAttribution ? 'ShotAI 检索 · Remotion 合成' : undefined,
       clips: clips.map(c => ({
         src:       c.src,
         startTime: c.startTime,

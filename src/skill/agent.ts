@@ -233,15 +233,16 @@ ${compositionList}
       `  ${i + 1}. 默认搜索词：「${s.defaultQuery}」  情绪：${s.mood ?? '不限'}`
     ).join('\n');
 
-    const system = `你是一个镜头搜索词优化助手。根据用户的视频主题，为每个镜头槽位生成更精准的中文语义搜索词（用于向量数据库搜索，简洁有画面感，不超过15字）。
-只输出 JSON 数组，元素数量必须与输入完全相同，例如：["搜索词1", "搜索词2", ...]`;
+    const system = `You are a shot search query optimizer. Given the user's video theme, generate natural language English descriptions for each shot slot — written as a single coherent sentence describing what the camera sees, as if narrating a film shot (e.g. "a rain-slicked street at night with neon signs reflecting in puddles"). These are used for semantic vector search.
+Output ONLY a JSON array with the same number of elements as input, e.g.: ["description 1", "description 2", ...]
+IMPORTANT: Always output in English. Use complete sentences, not keyword phrases.`;
 
-    const user = `视频主题：${theme}
+    const user = `Video theme: ${theme}
 
-镜头槽位（共 ${slots.length} 个）：
+Shot slots (${slots.length} total):
 ${slotList}
 
-请为每个槽位生成优化后的搜索词，保持顺序输出 JSON 数组。`;
+Output one natural language shot description per slot as a JSON array, preserving order.`;
 
     const raw = await this.backend.callLLM(system, user);
     try {

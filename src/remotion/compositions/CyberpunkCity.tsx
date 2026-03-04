@@ -121,9 +121,11 @@ interface CyberpunkProps {
   fps: number;
   cityName: string;
   bgm?: string;
+  subtitle?: string;
+  tagline?: string;
 }
 
-export function CyberpunkCity({ clips, fps, cityName, bgm }: CyberpunkProps) {
+export function CyberpunkCity({ clips, fps, cityName, bgm, subtitle = 'CITY PULSE', tagline = 'ShotAI Search · Remotion Render' }: CyberpunkProps) {
   const clipsFrames = clips.reduce(
     (s, c) => s + Math.max(1, Math.round((c.endTime - c.startTime) * fps)), 0
   );
@@ -140,7 +142,7 @@ export function CyberpunkCity({ clips, fps, cityName, bgm }: CyberpunkProps) {
       <Sequence from={0} durationInFrames={INTRO_FRAMES}>
         <IntroCard
           title={cityName}
-          subtitle="城市脉搏"
+          subtitle={subtitle}
           accentColor="#00ffe0"
           style="neon"
         />
@@ -178,7 +180,7 @@ export function CyberpunkCity({ clips, fps, cityName, bgm }: CyberpunkProps) {
       <Sequence from={INTRO_FRAMES + clipsFrames} durationInFrames={OUTRO_FRAMES}>
         <OutroCard
           title={cityName}
-          tagline="ShotAI 检索 · Remotion 渲染"
+          tagline={tagline}
           accentColor="#00ffe0"
           style="neon"
         />
