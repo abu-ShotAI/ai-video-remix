@@ -8,6 +8,24 @@
 
 ---
 
+## 作为 Claude Skill 使用
+
+本项目在 [`skill/`](skill/) 目录中内置了一个可直接安装的 [Claude Agent Skill](https://support.claude.com/en/articles/12512176-what-are-skills)。
+
+**在 Claude Code 中安装：**
+```bash
+/plugin install ai-video-remix@abu-ShotAI/ai-video-remix#skill
+```
+
+或在 Claude Code 设置中指向本地 `skill/` 文件夹。
+
+安装后，直接用中文描述需求即可：
+> *"帮我做一个旅行混剪"*
+> *"做一个赛博朋克城市夜景混剪"*
+> *"把上周末的素材做成体育集锦"*
+
+---
+
 ## 前置依赖
 
 | 工具 | 用途 | 安装方式 |

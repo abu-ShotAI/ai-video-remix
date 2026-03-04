@@ -8,6 +8,24 @@ Generate styled video compositions from your local ShotAI video library using na
 
 ---
 
+## Use as a Claude Skill
+
+This repo ships a ready-to-install [Claude Agent Skill](https://support.claude.com/en/articles/12512176-what-are-skills) in the [`skill/`](skill/) directory.
+
+**Install in Claude Code:**
+```bash
+/plugin install ai-video-remix@abu-ShotAI/ai-video-remix#skill
+```
+
+Or point Claude Code settings to the local `skill/` folder.
+
+Once installed, just describe what you want:
+> *"Make a travel vlog from my library"*
+> *"Create a cyberpunk city highlight reel"*
+> *"Sports highlight from last weekend's footage"*
+
+---
+
 ## Prerequisites
 
 | Tool | Purpose | Install |
