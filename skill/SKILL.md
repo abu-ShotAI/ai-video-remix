@@ -83,6 +83,61 @@ See [references/tuning.md](references/tuning.md) for solutions to:
 MIN_SCORE=0.5    # filter short/low-quality shots
 ```
 
+## Writing ShotAI Search Queries
+
+ShotAI uses semantic search powered by AI-generated tags and embedding vectors. Query quality is the single biggest factor in shot relevance — invest time here.
+
+### Query construction rules
+
+**Always write full sentences or rich phrases, never bare keywords.**
+
+The search engine understands semantic similarity (`"ocean"` matches `"sea"`, `"waves"`, `"shoreline"`), so richer context produces better recall.
+
+| Quality | Example | When to use |
+|---------|---------|-------------|
+| ⭐ Detailed description | `"A white seagull with spread wings gliding smoothly over calm blue ocean water, golden sunset light reflecting on the waves"` | Best precision — use for hero shots |
+| ⭐ Full sentence | `"A seagull flying gracefully over the ocean at sunset"` | Good balance of precision and recall |
+| Short phrase | `"seagull flying over ocean"` | Acceptable fallback |
+| Single keyword | `"seagull"` | Avoid — low precision, noisy results |
+
+### What to include in a query
+
+Describe the **visual content** of the ideal shot across these dimensions:
+
+- **Subject**: what/who is in frame (`a lone hiker`, `city traffic at night`, `athlete celebrating`)
+- **Action**: what is happening (`walking slowly through fog`, `speeding through intersection`, `jumping with arms raised`)
+- **Environment**: location, setting, time of day (`rain-soaked Tokyo street`, `mountain meadow at golden hour`, `empty stadium under floodlights`)
+- **Mood / atmosphere**: emotional tone (`melancholic`, `tense`, `euphoric`, `serene`)
+- **Camera feel**: implied movement or framing (`wide establishing shot`, `tight close-up`, `slow pan`, `handheld shaky`)
+
+Not all dimensions are needed every time — include whichever are most distinctive for the shot you want.
+
+### The refineQueries step
+
+When the agent runs `refineQueries`, it rewrites the composition's default slot queries to better match the user's actual library. Apply these principles:
+
+1. **Start from the slot's semantic intent** — what emotional or narrative role does this shot play in the composition?
+2. **Incorporate any context from the user's request** — location names, event names, specific subjects mentioned
+3. **Expand synonyms** — if the slot says `"water"`, try `"river flowing through forest"` or `"lake reflecting mountains"` based on what the library likely contains
+4. **Avoid negations** — `"not indoors"` does not work; instead describe the positive version (`"outdoor daylight scene"`)
+5. **One query per slot** — make it specific rather than trying to cover multiple scenarios
+
+### Examples: slot query → refined query
+
+```
+Slot default: "city at night"
+User request: "帮我做一个东京旅行混剪"
+Refined:      "Neon-lit Tokyo street at night, pedestrians crossing under glowing signs, rain reflections on pavement"
+
+Slot default: "nature landscape"
+User request: "trip to Patagonia last month"
+Refined:      "Dramatic Patagonia mountain landscape, snow-capped peaks under stormy clouds, vast open wilderness"
+
+Slot default: "athlete in action"
+User request: "basketball highlight from last game"
+Refined:      "Basketball player driving to the hoop, explosive movement, crowd in background blurred"
+```
+
 ## Adding a New Composition
 
 See [references/composition-guide.md](references/composition-guide.md) to add a new Remotion composition to the registry.
