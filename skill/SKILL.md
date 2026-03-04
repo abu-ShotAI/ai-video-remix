@@ -44,6 +44,8 @@ Options:
   --composition <id>   Override composition (skip LLM selection)
   --bgm <path>         Local MP3 path (skip YouTube search)
   --output <dir>       Output directory (default: ./output)
+  --lang <zh|en>       Output language: zh Chinese (default) / en English
+                       Affects: video title, per-clip captions & location labels, attribution line
   --probe              Scan library first, let LLM plan slots from actual content
 ```
 

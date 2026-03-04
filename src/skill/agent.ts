@@ -189,14 +189,18 @@ export interface AgentProvider {
 // ─── BaseAgent — all prompt logic lives here ──────────────────────────────────
 
 class BaseAgent implements AgentProvider {
-  constructor(private backend: LLMBackend) {}
+  constructor(private backend: LLMBackend, private lang: 'zh' | 'en' = 'zh') {}
 
   async parseIntent(userRequest: string): Promise<ParsedIntent> {
     const compositionList = REGISTRY.map(m =>
       `  - ${m.id}: ${m.label} — ${m.description}`
     ).join('\n');
 
-    const system = `你是一个视频混剪规划助手。根据用户的混剪需求，选择最合适的合成风格并提取主题。
+    const langInstr = this.lang === 'en'
+      ? 'Output the theme in English.'
+      : '主题用中文输出。';
+
+    const system = `你是一个视频混剪规划助手。根据用户的混剪需求，选择最合适的合成风格并提取主题。${langInstr}
 只输出 JSON，格式如下：
 {
   "theme": "视频主题名称（简短，用做片头片尾标题）",
@@ -273,6 +277,7 @@ Output JSON array:`;
     const system = `你是一个视频剪辑视效助手。根据每个镜头的语义描述，为每个镜头生成精准的视觉特效注解。
 只输出 JSON 数组，每个元素只包含相关字段（不相关字段省略）。
 当前合成需要的字段：${relevantFields}
+${this.lang === 'en' ? '如需生成 caption 字段，请用英文。' : '如需生成 caption 字段，请用中文。'}
 输出格式示例：[{"tone":"cool"},{"tone":"warm","dramatic":true},...]
 元素数量必须与输入完全相同。`;
 
@@ -320,6 +325,7 @@ ${clipList}
 2. 根据用户需求和库里有的内容，选择最合适的合成模板
 3. 生成专门针对这个库的镜头搜索槽位列表（不要用通用词，要用能在这个库里搜到东西的词）
 
+${this.lang === 'en' ? 'Output the theme field in English.' : '主题 theme 字段用中文输出。'}
 只输出 JSON，格式如下：
 {
   "theme": "视频主题（简短标题）",
@@ -416,6 +422,8 @@ export interface CreateAgentOptions {
   model?: string;
   /** Only for 'openai-compat': base URL of the compatible endpoint */
   baseUrl?: string;
+  /** Output language for theme titles and LLM-generated captions ('zh' | 'en', default 'zh') */
+  lang?: 'zh' | 'en';
 }
 
 /**
@@ -446,7 +454,7 @@ export function createAgent(
       console.warn('   ⚠  AGENT_PROVIDER=claude but ANTHROPIC_API_KEY is not set — falling back to heuristic');
       return new HeuristicAgent();
     }
-    return new BaseAgent(new AnthropicBackend(opts.apiKey, opts.model ?? 'claude-sonnet-4-6'));
+    return new BaseAgent(new AnthropicBackend(opts.apiKey, opts.model ?? 'claude-sonnet-4-6'), opts.lang);
   }
 
   if (opts.provider === 'openai') {
@@ -454,7 +462,7 @@ export function createAgent(
       console.warn('   ⚠  AGENT_PROVIDER=openai but OPENAI_API_KEY is not set — falling back to heuristic');
       return new HeuristicAgent();
     }
-    return new BaseAgent(new OpenAICompatBackend(opts.apiKey, opts.model ?? 'gpt-4o'));
+    return new BaseAgent(new OpenAICompatBackend(opts.apiKey, opts.model ?? 'gpt-4o'), opts.lang);
   }
 
   if (opts.provider === 'openai-compat') {
@@ -462,7 +470,7 @@ export function createAgent(
       console.warn('   ⚠  openai-compat requires apiKey + baseUrl — falling back to heuristic');
       return new HeuristicAgent();
     }
-    return new BaseAgent(new OpenAICompatBackend(opts.apiKey, opts.model ?? 'default', opts.baseUrl));
+    return new BaseAgent(new OpenAICompatBackend(opts.apiKey, opts.model ?? 'default', opts.baseUrl), opts.lang);
   }
 
   return new HeuristicAgent();

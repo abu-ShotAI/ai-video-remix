@@ -50,6 +50,8 @@ export interface SkillConfig {
   music:      MusicConfig;
   output:     OutputConfig;
   validation: ValidationConfig;
+  /** Output language for video titles, captions, and on-screen text. Default: 'zh' */
+  lang:       'zh' | 'en';
 }
 
 const OUTPUT_DIR = path.resolve(process.env.OUTPUT_DIR ?? path.join(process.cwd(), 'output'));
@@ -78,4 +80,5 @@ export const config: SkillConfig = {
     minScore:   parseFloat(process.env.MIN_SCORE  ?? '0.5'),
     maxRetries: parseInt(process.env.MAX_RETRIES  ?? '1'),
   },
+  lang: (process.env.LANG_OUTPUT === 'en' ? 'en' : 'zh') as 'zh' | 'en',
 };

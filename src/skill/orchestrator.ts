@@ -118,6 +118,13 @@ export interface RunSkillOptions {
    * Without this flag the agent picks from fixed registry templates.
    */
   probe?: boolean;
+  /**
+   * Output language for video titles, captions, and on-screen text.
+   * 'zh' = Chinese (default), 'en' = English.
+   * Affects: composition title, per-clip captions/locations, attribution line,
+   * and the language instruction given to the LLM for theme/caption generation.
+   */
+  lang?: 'zh' | 'en';
 }
 
 export interface RunSkillResult {
@@ -140,6 +147,7 @@ export async function runSkill(
   const outputDir = opts.outputDir ?? cfg.output.dir;
   const clipsDir  = cfg.output.clipsDir;
   const filePort  = cfg.output.filePort;
+  const lang      = opts.lang ?? cfg.lang ?? 'zh';
 
   fs.mkdirSync(clipsDir,  { recursive: true });
   fs.mkdirSync(outputDir, { recursive: true });
@@ -150,6 +158,7 @@ export async function runSkill(
     apiKey:   cfg.agent.apiKey,
     model:    cfg.agent.model,
     baseUrl:  cfg.agent.baseUrl,
+    lang,
   });
 
   const client = new ShotAIClient(cfg.mcp.baseUrl, cfg.mcp.token);
@@ -310,7 +319,7 @@ export async function runSkill(
   console.log(`\n[7/8] 🎬 渲染视频...`);
   const slug       = meta.id.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
   const outputFile = path.join(outputDir, `${slug}-${Date.now()}.mp4`);
-  const props      = meta.buildProps(resolvedClips, theme, bgmUrl, opts.showAttribution ?? true);
+  const props      = meta.buildProps(resolvedClips, theme, bgmUrl, opts.showAttribution ?? true, lang);
 
   // ── 8. Start file server + render ─────────────────────────────────────────
   const stopServer = await startFileServer(clipsDir, '', filePort);

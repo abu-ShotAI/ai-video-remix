@@ -31,6 +31,7 @@ function parseArgs(argv: string[]): {
   bgmPath?: string;
   outputDir?: string;
   probe?: boolean;
+  lang?: 'zh' | 'en';
 } {
   const args = argv.slice(2);
   const flags: Record<string, string> = {};
@@ -64,6 +65,7 @@ function parseArgs(argv: string[]): {
     bgmPath:       flags['bgm'],
     outputDir:     flags['output'],
     probe:         'probe' in flags,
+    lang:          (flags['lang'] === 'en' || flags['lang'] === 'zh') ? flags['lang'] : undefined,
   };
 }
 
@@ -81,6 +83,7 @@ AI Video Remix Skill — 自然语言驱动视频混剪
   --composition <id>   指定合成风格（跳过 AI 自动选择）
   --bgm <path>         本地 MP3 配乐路径（跳过 YouTube 自动搜索）
   --output <dir>       输出目录（默认: ./output）
+  --lang <zh|en>       输出语言：zh 中文（默认）/ en 英文，影响标题、字幕和片尾文字
   --probe              先扫描素材库内容，让 AI 根据库里实际有什么来定制搜索词
 
 可用合成:
@@ -96,15 +99,19 @@ ${REGISTRY.map(m => `  ${m.id.padEnd(16)} ${m.label} — ${m.description}`).join
 // ─── Entry point ─────────────────────────────────────────────────────────────
 
 async function main() {
-  const { userRequest, compositionId, bgmPath, outputDir, probe } = parseArgs(process.argv);
+  const { userRequest, compositionId, bgmPath, outputDir, probe, lang } = parseArgs(process.argv);
+
+  // lang flag overrides env var
+  const resolvedLang: 'zh' | 'en' = lang ?? config.lang;
 
   console.log(`\n🎬 AI Video Remix Skill`);
   console.log(`   需求: "${userRequest}"`);
   console.log(`   Agent: ${config.agent.provider}`);
+  console.log(`   语言: ${resolvedLang === 'en' ? 'English' : '中文'}`);
   if (compositionId) console.log(`   合成: ${compositionId} (手动指定)`);
 
   try {
-    const result = await runSkill(userRequest, config, { compositionId, bgmPath, outputDir, probe });
+    const result = await runSkill(userRequest, config, { compositionId, bgmPath, outputDir, probe, lang: resolvedLang });
     console.log(`\n🎉 渲染完成！`);
     console.log(`   主题: ${result.theme}`);
     console.log(`   合成: ${result.compositionId}`);

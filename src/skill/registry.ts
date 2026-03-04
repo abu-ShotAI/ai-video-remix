@@ -46,9 +46,10 @@ export interface CompositionMeta {
    * Build the Remotion input props from resolved clips.
    * `title` is the theme/title extracted from user intent.
    * `bgm` is the HTTP URL of the background music file (may be undefined).
-   * `showAttribution` controls whether to show "ShotAI 检索 · Remotion 合成" in the outro.
+   * `showAttribution` controls whether to show attribution text in the outro.
+   * `lang` controls the language of all on-screen text ('zh' | 'en', default 'zh').
    */
-  buildProps(clips: ResolvedClip[], title: string, bgm: string | undefined, showAttribution?: boolean): Record<string, unknown>;
+  buildProps(clips: ResolvedClip[], title: string, bgm: string | undefined, showAttribution?: boolean, lang?: 'zh' | 'en'): Record<string, unknown>;
 }
 
 // ─── CyberpunkCity ────────────────────────────────────────────────────────────
@@ -66,12 +67,12 @@ const cyberpunkMeta: CompositionMeta = {
     { query: 'glass facade neon reflection city night',  mood: 'urban' },
     { query: 'dense skyscrapers lights high-rise night', mood: 'urban' },
   ],
-  buildProps(clips, title, bgm, showAttribution = true) {
+  buildProps(clips, title, bgm, showAttribution = true, lang = 'zh') {
     return {
       fps:      30,
       cityName: title,
-      subtitle: 'CITY PULSE',
-      tagline:  showAttribution ? 'ShotAI Search · Remotion Render' : undefined,
+      subtitle: lang === 'en' ? 'CITY PULSE' : 'CITY PULSE',
+      tagline:  showAttribution ? (lang === 'en' ? 'ShotAI Search · Remotion Render' : 'ShotAI 检索 · Remotion 合成') : undefined,
       bgm,
       clips: clips.map(c => ({
         src:       c.src,
@@ -100,12 +101,12 @@ const travelMeta: CompositionMeta = {
   description: '城市名片卡弹出 + 白色闪光转场 + 底部进度条，适合多地点旅行记录',
   musicStyle:  'travel acoustic cinematic upbeat vlog background',
   shotSlots:   DEFAULT_TRAVEL_SLOTS,
-  buildProps(clips, title, bgm, showAttribution = true) {
+  buildProps(clips, title, bgm, showAttribution = true, lang = 'zh') {
     return {
       fps: 30,
       title,
       bgm,
-      attribution: showAttribution ? 'ShotAI 检索 · Remotion 合成' : undefined,
+      attribution: showAttribution ? (lang === 'en' ? 'ShotAI Search · Remotion Render' : 'ShotAI 检索 · Remotion 合成') : undefined,
       clips: clips.map(c => ({
         src:       c.src,
         startTime: c.startTime,
@@ -134,12 +135,12 @@ const moodMeta: CompositionMeta = {
     { query: '阳光草地慢镜宁静',   mood: 'slow', extra: { mood: 'slow' } },
     { query: '城市建筑静谧航拍',   mood: 'slow', extra: { mood: 'slow' } },
   ],
-  buildProps(clips, title, bgm, showAttribution = true) {
+  buildProps(clips, title, bgm, showAttribution = true, lang = 'zh') {
     return {
       fps: 30,
       title,
       bgm,
-      attribution: showAttribution ? 'ShotAI 检索 · Remotion 合成' : undefined,
+      attribution: showAttribution ? (lang === 'en' ? 'ShotAI Search · Remotion Render' : 'ShotAI 检索 · Remotion 合成') : undefined,
       clips: clips.map(c => ({
         src:       c.src,
         startTime: c.startTime,
@@ -154,66 +155,84 @@ const moodMeta: CompositionMeta = {
 
 // ─── NatureWild ───────────────────────────────────────────────────────────────
 
+// Bilingual slot data for NatureWild
+const NATURE_SLOTS: Array<ShotSlot & { captionEn: string }> = [
+  { query: 'aerial forest river landscape nature wide',         mood: 'slow', extra: { scene: 'THE LIVING EARTH',      caption: '地球上，每一天都是新的开始' }, captionEn: 'On Earth, every day is a new beginning' },
+  { query: 'black panther running hunting stalking',            mood: 'slow', extra: { scene: 'SOUTH AFRICA · SAVANNA', caption: '黑豹，独行者，暗影中的猎手' }, captionEn: 'The leopard — solitary hunter in the shadows' },
+  { query: 'fish swimming ocean underwater sunlight',           mood: 'slow', extra: { scene: 'PACIFIC OCEAN · DEEP',   caption: '海洋覆盖地球七成，却仍是谜' }, captionEn: 'The ocean covers 70% of Earth — yet remains a mystery' },
+  { query: 'bird diving fish catching ocean wave',              mood: 'slow', extra: { scene: 'OPEN SEA',               caption: '天与海之间，猎与被猎的永恒' }, captionEn: 'Between sky and sea — the eternal hunt' },
+  { query: 'flowers bloom macro petal close nature',            mood: 'slow', extra: { scene: 'TEMPERATE GARDEN',       caption: '一朵花的一生，只有几天' }, captionEn: 'A flower\'s entire life — only a few days' },
+  { query: 'capybara swimming floating water peaceful',         mood: 'calm', extra: { scene: 'SOUTH AMERICA · WETLAND', caption: '水豚不慌不忙，这才是活法' }, captionEn: 'The capybara — unhurried, unbothered, living right' },
+  { query: 'mountain lion cougar walking forest night dark',    mood: 'slow', extra: { scene: 'ROCKY MOUNTAINS · DUSK', caption: '暮色降临，山狮才真正醒来' }, captionEn: 'As dusk falls, the mountain lion finally wakes' },
+  { query: 'rainforest canopy aerial green dense',              mood: 'slow', extra: { scene: 'AMAZON BASIN',           caption: '雨林是地球的肺，也是万物的家' }, captionEn: 'The rainforest — Earth\'s lungs and home to all' },
+  { query: 'bird silhouette sunset sky flying alone',           mood: 'slow', extra: { scene: 'GOLDEN HOUR',            caption: '候鸟向南，它知道季节的秘密' }, captionEn: 'The migrant bird flies south — it knows the secret of seasons' },
+  { query: 'mountain lion family cubs nocturnal night',         mood: 'slow', extra: { scene: 'AFTER DARK',             caption: '夜，才是它们的白天' }, captionEn: 'Night is their day' },
+];
+
 const natureMeta: CompositionMeta = {
   id:          'NatureWild',
   label:       '自然野生动物',
   description: 'BBC纪录片风格：溶接转场 + Ken Burns推镜 + 叙事标注卡，适合自然/野生动物主题',
   musicStyle:  'nature documentary ambient orchestral peaceful wildlife',
-  // 叙事弧：大地觉醒 → 捕食者 → 海洋世界 → 植物生命 → 群居动物 → 夜行者 → 自然循环
-  shotSlots: [
-    { query: 'aerial forest river landscape nature wide',         mood: 'slow', extra: { scene: 'THE LIVING EARTH',      caption: '地球上，每一天都是新的开始' } },
-    { query: 'black panther running hunting stalking',            mood: 'slow', extra: { scene: 'SOUTH AFRICA · SAVANNA', caption: '黑豹，独行者，暗影中的猎手' } },
-    { query: 'fish swimming ocean underwater sunlight',           mood: 'slow', extra: { scene: 'PACIFIC OCEAN · DEEP',   caption: '海洋覆盖地球七成，却仍是谜' } },
-    { query: 'bird diving fish catching ocean wave',              mood: 'slow', extra: { scene: 'OPEN SEA',               caption: '天与海之间，猎与被猎的永恒' } },
-    { query: 'flowers bloom macro petal close nature',            mood: 'slow', extra: { scene: 'TEMPERATE GARDEN',       caption: '一朵花的一生，只有几天' } },
-    { query: 'capybara swimming floating water peaceful',         mood: 'calm', extra: { scene: 'SOUTH AMERICA · WETLAND','caption': '水豚不慌不忙，这才是活法' } },
-    { query: 'mountain lion cougar walking forest night dark',    mood: 'slow', extra: { scene: 'ROCKY MOUNTAINS · DUSK', caption: '暮色降临，山狮才真正醒来' } },
-    { query: 'rainforest canopy aerial green dense',              mood: 'slow', extra: { scene: 'AMAZON BASIN',           caption: '雨林是地球的肺，也是万物的家' } },
-    { query: 'bird silhouette sunset sky flying alone',           mood: 'slow', extra: { scene: 'GOLDEN HOUR',            caption: '候鸟向南，它知道季节的秘密' } },
-    { query: 'mountain lion family cubs nocturnal night',         mood: 'slow', extra: { scene: 'AFTER DARK',             caption: '夜，才是它们的白天' } },
-  ],
-  buildProps(clips, title, bgm, showAttribution = true) {
+  shotSlots:   NATURE_SLOTS,
+  buildProps(clips, title, bgm, showAttribution = true, lang = 'zh') {
     return {
       fps: 30, title, bgm,
-      attribution: showAttribution ? 'ShotAI 检索 · Remotion 合成' : undefined,
-      clips: clips.map(c => ({
-        src: c.src, startTime: c.startTime, endTime: c.endTime, summary: c.summary,
-        scene: c.scene ?? '', caption: c.caption ?? '',
-        kenBurns: c.kenBurns ?? 'zoom-in',
-        textBg: c.textBg ?? {},
-      })),
+      attribution: showAttribution ? (lang === 'en' ? 'ShotAI Search · Remotion Render' : 'ShotAI 检索 · Remotion 合成') : undefined,
+      clips: clips.map((c, i) => {
+        const slotCaption = lang === 'en'
+          ? (NATURE_SLOTS[i]?.captionEn ?? c.caption ?? '')
+          : (c.caption ?? '');
+        return {
+          src: c.src, startTime: c.startTime, endTime: c.endTime, summary: c.summary,
+          scene: c.scene ?? '',
+          caption: (c as any)._captionOverridden ? c.caption : slotCaption,
+          kenBurns: c.kenBurns ?? 'zoom-in',
+          textBg: c.textBg ?? {},
+        };
+      }),
     };
   },
 };
 
 // ─── SwitzerlandScenic ────────────────────────────────────────────────────────
 
+// Bilingual slot data for SwitzerlandScenic
+const SWITZERLAND_SLOTS: Array<ShotSlot & { captionEn: string }> = [
+  { query: 'mountain peaks snow alps wide aerial',          mood: 'calm', extra: { location: 'SWISS ALPS',       caption: '世界的屋脊，从这里开始',     tone: 'cool' }, captionEn: 'The roof of the world begins here' },
+  { query: 'person hiking trail mountain path',             mood: 'calm', extra: { location: 'MOUNTAIN TRAIL',   caption: '每一步，都是与自己的对话',   tone: 'cool' }, captionEn: 'Every step — a conversation with yourself' },
+  { query: 'green meadow rolling hills grass',              mood: 'calm', extra: { location: 'ALPINE MEADOW',    caption: '翻过这片草甸，世界忽然开阔', tone: 'warm' }, captionEn: 'Over the meadow, the world suddenly opens up' },
+  { query: 'waterfall river mountain stream swimming',      mood: 'slow', extra: { location: 'MOUNTAIN STREAM',  caption: '冰雪融化，奔流向远方',       tone: 'cool' }, captionEn: 'Ice and snow melt, rushing toward the horizon' },
+  { query: 'mountain summit peak wide panorama',            mood: 'slow', extra: { location: 'SUMMIT',           caption: '站在这里，才懂得渺小的意义', tone: 'cool' }, captionEn: 'Standing here, you understand what it means to be small' },
+  { query: 'lake reflection calm water mountain shore',     mood: 'slow', extra: { location: 'ALPINE LAKE',      caption: '湖面如镜，倒映另一个世界',   tone: 'cool' }, captionEn: 'The lake, a mirror reflecting another world' },
+  { query: 'alpine flowers wildflowers spring mountain',    mood: 'calm', extra: { location: 'WILDFLOWER FIELD', caption: '六月的高山，是花的海洋',     tone: 'warm' }, captionEn: 'June in the mountains — a sea of wildflowers' },
+  { query: 'european village small town valley overlook',   mood: 'calm', extra: { location: 'VALLEY VILLAGE',   caption: '小镇藏在山谷，时间慢下来',   tone: 'warm' }, captionEn: 'A village hidden in the valley, where time slows down' },
+  { query: 'sunset golden hour mountain silhouette sky',    mood: 'slow', extra: { location: 'GOLDEN HOUR',      caption: '光线拉长，一天的行程落幕',   tone: 'warm' }, captionEn: 'Light stretches long — the day\'s journey draws to a close' },
+  { query: 'couple van road trip mountain scenic overlook', mood: 'calm', extra: { location: 'ON THE ROAD',      caption: '带上行李，去找下一座山',     tone: 'warm' }, captionEn: 'Pack your bags — the next mountain awaits' },
+];
+
 const switzerlandMeta: CompositionMeta = {
   id:          'SwitzerlandScenic',
   label:       '瑞士风光',
   description: '山地电影感：溶接转场 + Ken Burns + 底部叙事字幕，徒步者视角叙事弧，适合自然旅行主题',
   musicStyle:  'alpine acoustic orchestral cinematic peaceful mountain travel',
-  shotSlots: [
-    { query: 'mountain peaks snow alps wide aerial',          mood: 'calm', extra: { location: 'SWISS ALPS',       caption: '世界的屋脊，从这里开始',     tone: 'cool' } },
-    { query: 'person hiking trail mountain path',             mood: 'calm', extra: { location: 'MOUNTAIN TRAIL',   caption: '每一步，都是与自己的对话',   tone: 'cool' } },
-    { query: 'green meadow rolling hills grass',              mood: 'calm', extra: { location: 'ALPINE MEADOW',    caption: '翻过这片草甸，世界忽然开阔', tone: 'warm' } },
-    { query: 'waterfall river mountain stream swimming',      mood: 'slow', extra: { location: 'MOUNTAIN STREAM', caption: '冰雪融化，奔流向远方',       tone: 'cool' } },
-    { query: 'mountain summit peak wide panorama',            mood: 'slow', extra: { location: 'SUMMIT',           caption: '站在这里，才懂得渺小的意义', tone: 'cool' } },
-    { query: 'lake reflection calm water mountain shore',     mood: 'slow', extra: { location: 'ALPINE LAKE',      caption: '湖面如镜，倒映另一个世界',   tone: 'cool' } },
-    { query: 'alpine flowers wildflowers spring mountain',    mood: 'calm', extra: { location: 'WILDFLOWER FIELD', caption: '六月的高山，是花的海洋',     tone: 'warm' } },
-    { query: 'european village small town valley overlook',   mood: 'calm', extra: { location: 'VALLEY VILLAGE',  caption: '小镇藏在山谷，时间慢下来',   tone: 'warm' } },
-    { query: 'sunset golden hour mountain silhouette sky',    mood: 'slow', extra: { location: 'GOLDEN HOUR',      caption: '光线拉长，一天的行程落幕',   tone: 'warm' } },
-    { query: 'couple van road trip mountain scenic overlook', mood: 'calm', extra: { location: 'ON THE ROAD',      caption: '带上行李，去找下一座山',     tone: 'warm' } },
-  ],
-  buildProps(clips, title, bgm, showAttribution = true) {
+  shotSlots:   SWITZERLAND_SLOTS,
+  buildProps(clips, title, bgm, showAttribution = true, lang = 'zh') {
     return {
       fps: 30, title, bgm,
-      attribution: showAttribution ? 'ShotAI 检索 · Remotion 合成' : undefined,
-      clips: clips.map(c => ({
-        src: c.src, startTime: c.startTime, endTime: c.endTime, summary: c.summary,
-        location: c.location ?? '', caption: c.caption ?? '', tone: c.tone ?? 'cool',
-        textBg: c.textBg ?? {},
-      })),
+      attribution: showAttribution ? (lang === 'en' ? 'ShotAI Search · Remotion Render' : 'ShotAI 检索 · Remotion 合成') : undefined,
+      clips: clips.map((c, i) => {
+        const slotCaption = lang === 'en'
+          ? (SWITZERLAND_SLOTS[i]?.captionEn ?? c.caption ?? '')
+          : (c.caption ?? '');
+        return {
+          src: c.src, startTime: c.startTime, endTime: c.endTime, summary: c.summary,
+          location: c.location ?? '',
+          caption: (c as any)._captionOverridden ? c.caption : slotCaption,
+          tone: c.tone ?? 'cool',
+          textBg: c.textBg ?? {},
+        };
+      }),
     };
   },
 };
@@ -247,21 +266,23 @@ const sportsMeta: CompositionMeta = {
   // 7 goals in chronological order from France 4-3 Argentina, 2018 FIFA WC R16
   // goalAt: video timestamp (seconds) confirmed by ShotAI scan of all goal moments
   shotSlots: [
-    { query: 'Griezmann penalty kick goal France Argentina 2018',  mood: 'fast', extra: { sport: 'football', caption: '1-0 ⚽ 格列兹曼 13\'', goalAt: 778 } },
-    { query: 'Di Maria long shot goal Argentina France',           mood: 'fast', extra: { sport: 'football', caption: '1-1 ⚽ 迪马利亚 41\'', goalAt: 648 } },
-    { query: 'Mercado goal Argentina France score',                mood: 'fast', extra: { sport: 'football', caption: '2-1 ⚽ 梅卡多 48\'',  goalAt: 2858 } },
-    { query: 'Pavard volley goal France Argentina spectacular',    mood: 'fast', extra: { sport: 'football', caption: '2-2 ⚽ 帕瓦尔 57\'',  goalAt: 2956 } },
-    { query: 'Mbappe goal sprint France Argentina World Cup',      mood: 'fast', extra: { sport: 'football', caption: '3-2 ⚽ 姆巴佩 59\'',  goalAt: 3718 } },
-    { query: 'Mbappe second goal France Argentina 64 minutes',     mood: 'fast', extra: { sport: 'football', caption: '4-2 ⚽ 姆巴佩 64\'',  goalAt: 3884 } },
-    { query: 'Aguero goal Argentina France late consolation',      mood: 'fast', extra: { sport: 'football', caption: '4-3 ⚽ 阿圭罗 90\'',  goalAt: 5270 } },
+    { query: 'Griezmann penalty kick goal France Argentina 2018',  mood: 'fast', extra: { sport: 'football', caption: '1-0 ⚽ 格列兹曼 13\'', captionEn: "1-0 ⚽ Griezmann 13'", goalAt: 778 } },
+    { query: 'Di Maria long shot goal Argentina France',           mood: 'fast', extra: { sport: 'football', caption: '1-1 ⚽ 迪马利亚 41\'', captionEn: "1-1 ⚽ Di María 41'",  goalAt: 648 } },
+    { query: 'Mercado goal Argentina France score',                mood: 'fast', extra: { sport: 'football', caption: '2-1 ⚽ 梅卡多 48\'',  captionEn: "2-1 ⚽ Mercado 48'",   goalAt: 2858 } },
+    { query: 'Pavard volley goal France Argentina spectacular',    mood: 'fast', extra: { sport: 'football', caption: '2-2 ⚽ 帕瓦尔 57\'',  captionEn: "2-2 ⚽ Pavard 57'",    goalAt: 2956 } },
+    { query: 'Mbappe goal sprint France Argentina World Cup',      mood: 'fast', extra: { sport: 'football', caption: '3-2 ⚽ 姆巴佩 59\'',  captionEn: "3-2 ⚽ Mbappé 59'",    goalAt: 3718 } },
+    { query: 'Mbappe second goal France Argentina 64 minutes',     mood: 'fast', extra: { sport: 'football', caption: '4-2 ⚽ 姆巴佩 64\'',  captionEn: "4-2 ⚽ Mbappé 64'",    goalAt: 3884 } },
+    { query: 'Aguero goal Argentina France late consolation',      mood: 'fast', extra: { sport: 'football', caption: '4-3 ⚽ 阿圭罗 90\'',  captionEn: "4-3 ⚽ Agüero 90'",    goalAt: 5270 } },
   ],
-  buildProps(clips, title, bgm, showAttribution = true) {
+  buildProps(clips, title, bgm, showAttribution = true, lang = 'zh') {
     return {
       fps: 30, title, bgm,
-      attribution: showAttribution ? 'ShotAI 检索 · Remotion 合成' : undefined,
+      attribution: showAttribution ? (lang === 'en' ? 'ShotAI Search · Remotion Render' : 'ShotAI 检索 · Remotion 合成') : undefined,
       clips: clips.map(c => ({
         src: c.src, startTime: c.startTime, endTime: c.endTime, summary: c.summary,
-        sport: c.sport ?? 'football', caption: c.caption ?? '', dramatic: c.dramatic ?? false,
+        sport: c.sport ?? 'football',
+        caption: lang === 'en' ? (c.captionEn ?? c.caption ?? '') : (c.caption ?? ''),
+        dramatic: c.dramatic ?? false,
         textBg: c.textBg ?? {},
       })),
     };
