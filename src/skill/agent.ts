@@ -230,19 +230,17 @@ ${compositionList}
     theme: string,
   ): Promise<string[]> {
     const slotList = slots.map((s, i) =>
-      `  ${i + 1}. 默认搜索词：「${s.defaultQuery}」  情绪：${s.mood ?? '不限'}`
+      `  ${i + 1}. default: "${s.defaultQuery}"  mood: ${s.mood ?? 'any'}`
     ).join('\n');
 
-    const system = `You are a shot search query optimizer. Given the user's video theme, generate natural language English descriptions for each shot slot — written as a single coherent sentence describing what the camera sees, as if narrating a film shot (e.g. "a rain-slicked street at night with neon signs reflecting in puddles"). These are used for semantic vector search.
-Output ONLY a JSON array with the same number of elements as input, e.g.: ["description 1", "description 2", ...]
-IMPORTANT: Always output in English. Use complete sentences, not keyword phrases.`;
+    const system = `Shot search query optimizer. For each slot, write a short English phrase (5–8 words) describing what the camera sees. Used for semantic vector search — concise beats verbose.
+Output ONLY a JSON array of the same length. English only.`;
 
-    const user = `Video theme: ${theme}
-
-Shot slots (${slots.length} total):
+    const user = `Theme: ${theme}
+Slots:
 ${slotList}
 
-Output one natural language shot description per slot as a JSON array, preserving order.`;
+Output JSON array:`;
 
     const raw = await this.backend.callLLM(system, user);
     try {
