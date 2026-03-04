@@ -29,8 +29,8 @@ Uses **ShotAI** (semantic shot search) + **LLM planning** + **Remotion** (React-
 ## Quick Start
 
 ```bash
-git clone https://github.com/seeknetic/ai-video-editor.git
-cd ai-video-editor
+git clone https://github.com/abu-ShotAI/ai-video-remix.git
+cd ai-video-remix
 npm install
 cp .env.example .env   # edit with your ShotAI token + optional LLM key
 ```
