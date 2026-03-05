@@ -329,7 +329,11 @@ export async function runSkill(
     if (ann.dramatic   !== undefined) resolvedClips[i].dramatic   = ann.dramatic;
     if (ann.kenBurns   !== undefined) resolvedClips[i].kenBurns   = ann.kenBurns;
     if (ann.transition !== undefined) resolvedClips[i].transition = ann.transition;
-    if (ann.caption    !== undefined && ann.caption.trim()) resolvedClips[i].caption = ann.caption;
+    if (ann.caption    !== undefined && ann.caption.trim()) {
+      const cap = ann.caption.trim();
+      const maxLen = lang === 'en' ? 30 : 10;
+      resolvedClips[i].caption = cap.length > maxLen ? cap.slice(0, maxLen) : cap;
+    }
     if (ann.textBg     !== undefined) resolvedClips[i].textBg     = ann.textBg;
     console.log(`   🎨 [${i+1}] ${JSON.stringify(ann)} ← "${resolvedClips[i].summary?.slice(0,40)}"`);
   }

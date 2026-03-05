@@ -110,24 +110,33 @@ export class OpenAICompatBackend implements LLMBackend {
   }
 
   async callLLM(system: string, user: string): Promise<string> {
-    const res = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: this.model,
-        messages: [
-          { role: 'system',  content: system },
-          { role: 'user',    content: user   },
-        ],
-        max_tokens: 1024,
-      }),
-    });
-    if (!res.ok) throw new Error(`LLM API error ${res.status}: ${await res.text()}`);
-    const data = await res.json() as any;
-    return data.choices[0].message.content as string;
+    let lastError: Error | undefined;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const res = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages: [
+            { role: 'system',  content: system },
+            { role: 'user',    content: user   },
+          ],
+          max_tokens: 1024,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json() as any;
+        return data.choices[0].message.content as string;
+      }
+      const body = await res.text();
+      lastError = new Error(`LLM API error ${res.status}: ${body}`);
+      if (res.status < 500) break; // 4xx errors won't be fixed by retry
+      if (attempt < 3) console.warn(`   ⚠  LLM API ${res.status}, retrying (${attempt}/3)...`);
+    }
+    throw lastError!;
   }
 }
 
@@ -289,11 +298,9 @@ ${slotList}
 caption 字段写作规则（重要）：
 - 必须基于 visual_analysis（如果有），描述这个镜头实际发生的内容
 - 文字必须服务整个视频的叙事弧，而非单纯描述这一个镜头的内容
-- 中文：最多16个字（超过会被截断，务必控制）
-- 英文：最多30个字符
+- ${this.lang === 'en' ? '**Language: ENGLISH only. Maximum 30 characters. Do NOT use Chinese.**' : '**语言：必须用中文，禁止英文。最多10个字，超过会被硬截断显示省略号。**'}
 - 风格：简洁有力，像纪录片旁白或诗句，传递情绪而非描述细节
 - 反例（太长/太平）："一只黑豹在非洲热带雨林的茂密植被中悄悄地穿行觅食" → 正例："暗夜行者，无声的猎手"
-${this.lang === 'en' ? 'Generate caption field in English.' : 'caption 字段用中文。'}
 输出格式示例：[{"tone":"cool"},{"tone":"warm","dramatic":true},...]
 元素数量必须与输入完全相同。`;
 
