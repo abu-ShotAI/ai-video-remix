@@ -254,6 +254,7 @@ export async function runSkill(
   // ── 5. Extract clips with ffmpeg ─────────────────────────────────────────
   console.log('\n[5/6] ✂️  提取片段...');
   const resolvedClips: ResolvedClip[] = [];
+  const shotsForClips: Array<(ValidatedShot & { videoPath: string })> = [];
 
   for (let i = 0; i < pickedShots.length; i++) {
     const shot = pickedShots[i];
@@ -286,6 +287,7 @@ export async function runSkill(
       ...slot.extra,
     };
     resolvedClips.push(clip);
+    shotsForClips.push(shot);
   }
 
   if (resolvedClips.length === 0) {
@@ -298,13 +300,14 @@ export async function runSkill(
   // First, gather visual analysis for each clip via ShotAI (Ollama multimodal)
   const visualAnalyses: (string | undefined)[] = [];
   for (let i = 0; i < resolvedClips.length; i++) {
-    const shot = pickedShots[i];
+    const shot = shotsForClips[i];
     if (shot) {
       try {
         const analysis = await client.analyzeVisual(shot.id, '请简短描述这个镜头里实际发生的事情（不超过50字）。');
         visualAnalyses.push(analysis);
         console.log(`   👁  [${i+1}] ${analysis.slice(0, 60)}`);
-      } catch {
+      } catch (e) {
+        console.warn(`   ⚠  [${i+1}] analyzeVisual failed: ${(e as Error).message?.slice(0, 80)}`);
         visualAnalyses.push(undefined);
       }
     } else {

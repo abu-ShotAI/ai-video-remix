@@ -171,7 +171,7 @@ export function CyberpunkCity({ clips, fps, cityName, bgm, subtitle = 'CITY PULS
               <Scanlines />
               <CornerFrame />
               <GlitchFlicker dur={dur} />
-              <NeonTitle text={clip.caption || clip.summary} />
+              <NeonTitle text={clip.caption?.trim() || ''} />
               <Timecode clip={i + 1} total={clips.length} />
             </AbsoluteFill>
           </Sequence>
