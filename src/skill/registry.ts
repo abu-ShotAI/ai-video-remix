@@ -79,6 +79,8 @@ const cyberpunkMeta: CompositionMeta = {
         startTime: c.startTime,
         endTime:   c.endTime,
         summary:   c.summary,
+        caption:   lang === 'en' ? (c.captionEn ?? c.caption ?? '') : (c.caption ?? ''),
+        tone:      c.tone ?? 'cool',
       })),
     };
   },

@@ -15,6 +15,8 @@ export interface CyberpunkClip {
   startTime: number;
   endTime: number;
   summary: string;
+  caption?: string;
+  tone?: 'cool' | 'warm';
 }
 
 const INTRO_FRAMES = 60;  // 2s
@@ -169,7 +171,7 @@ export function CyberpunkCity({ clips, fps, cityName, bgm, subtitle = 'CITY PULS
               <Scanlines />
               <CornerFrame />
               <GlitchFlicker dur={dur} />
-              <NeonTitle text={clip.summary} />
+              <NeonTitle text={clip.caption || clip.summary} />
               <Timecode clip={i + 1} total={clips.length} />
             </AbsoluteFill>
           </Sequence>
