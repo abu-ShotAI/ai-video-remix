@@ -172,11 +172,11 @@ export interface AgentProvider {
    * Given the actual shot summaries returned by ShotAI, produce per-clip
    * visual annotations that drive Remotion special-effects decisions.
    *
-   * @param clips  The resolved clip list (summary, optional keyframePath, slot extra)
+   * @param clips  The resolved clip list (summary, optional keyframePath, slot extra, optional visual analysis)
    * @param compositionId  Which composition is being rendered (determines which fields matter)
    */
   annotateClips(
-    clips: Array<{ summary: string; keyframePath?: string; slotExtra?: Record<string, unknown> }>,
+    clips: Array<{ summary: string; keyframePath?: string; slotExtra?: Record<string, unknown>; visualAnalysis?: string }>,
     compositionId: string,
   ): Promise<ClipAnnotation[]>;
   /**
@@ -201,7 +201,7 @@ class BaseAgent implements AgentProvider {
       : '主题用中文输出。';
 
     const system = `你是一个视频混剪规划助手。根据用户的混剪需求，选择最合适的合成风格并提取主题。${langInstr}
-只输出 JSON，格式如下：
+只输出原始 JSON（不要 markdown 代码块，不要任何说明），格式如下：
 {
   "theme": "视频主题名称（简短，用做片头片尾标题）",
   "compositionId": "CyberpunkCity | TravelVlog | MoodDriven",
@@ -237,14 +237,21 @@ ${compositionList}
       `  ${i + 1}. default: "${s.defaultQuery}"  mood: ${s.mood ?? 'any'}`
     ).join('\n');
 
-    const system = `Shot search query optimizer. For each slot, write a short English phrase (5–8 words) describing what the camera sees. Used for semantic vector search — concise beats verbose.
-Output ONLY a JSON array of the same length. English only.`;
+    const system = `You are a video shot search query writer. Rewrite each slot into an effective semantic search query.
+
+Rules:
+- Write a descriptive English sentence or rich phrase (10–20 words) describing exactly what the camera captures
+- Include: subject, action, environment, lighting/time of day — the more specific the visual, the better
+- Use real-world vocabulary (e.g. "Eiffel Tower", "snow-capped Alps", "soccer player sprinting") — never genre labels like "cyberpunk", "cinematic", or "bokeh"
+- If the theme names a real place or event, anchor your queries to that location/event
+- Avoid negations ("not indoors") — describe the positive target instead
+- Output ONLY a raw JSON array — no explanation, no markdown fences, no preamble`;
 
     const user = `Theme: ${theme}
 Slots:
 ${slotList}
 
-Output JSON array:`;
+["query1","query2",...]`;
 
     const raw = await this.backend.callLLM(system, user);
     try {
@@ -260,7 +267,7 @@ Output JSON array:`;
   }
 
   async annotateClips(
-    clips: Array<{ summary: string; keyframePath?: string; slotExtra?: Record<string, unknown> }>,
+    clips: Array<{ summary: string; keyframePath?: string; slotExtra?: Record<string, unknown>; visualAnalysis?: string }>,
     compositionId: string,
   ): Promise<ClipAnnotation[]> {
     const fieldHints: Record<string, string> = {
@@ -270,14 +277,23 @@ Output JSON array:`;
     };
     const relevantFields = fieldHints[compositionId] ?? '"tone": "warm"|"cool"';
 
-    const clipList = clips.map((c, i) =>
-      `  ${i + 1}. summary: "${c.summary}"${c.slotExtra?.caption ? `  caption_hint: "${c.slotExtra.caption}"` : ''}`
-    ).join('\n');
+    const clipList = clips.map((c, i) => {
+      const visualPart = c.visualAnalysis ? `\n     visual_analysis: "${c.visualAnalysis.slice(0, 200)}"` : '';
+      return `  ${i + 1}. summary: "${c.summary}"${visualPart}`;
+    }).join('\n');
 
-    const system = `你是一个视频剪辑视效助手。根据每个镜头的语义描述，为每个镜头生成精准的视觉特效注解。
-只输出 JSON 数组，每个元素只包含相关字段（不相关字段省略）。
+    const system = `你是一个视频剪辑视效助手。根据每个镜头的语义描述和视觉分析，为每个镜头生成精准的视觉特效注解。
+只输出原始 JSON 数组（不要 markdown 代码块，不要任何说明），每个元素只包含相关字段（不相关字段省略）。
 当前合成需要的字段：${relevantFields}
-${this.lang === 'en' ? '如需生成 caption 字段，请用英文。' : '如需生成 caption 字段，请用中文。'}
+
+caption 字段写作规则（重要）：
+- 必须基于 visual_analysis（如果有），描述这个镜头实际发生的内容
+- 文字必须服务整个视频的叙事弧，而非单纯描述这一个镜头的内容
+- 中文：最多16个字（超过会被截断，务必控制）
+- 英文：最多30个字符
+- 风格：简洁有力，像纪录片旁白或诗句，传递情绪而非描述细节
+- 反例（太长/太平）："一只黑豹在非洲热带雨林的茂密植被中悄悄地穿行觅食" → 正例："暗夜行者，无声的猎手"
+${this.lang === 'en' ? 'Generate caption field in English.' : 'caption 字段用中文。'}
 输出格式示例：[{"tone":"cool"},{"tone":"warm","dramatic":true},...]
 元素数量必须与输入完全相同。`;
 
@@ -321,18 +337,24 @@ ${clipList}
     ).join('\n\n');
 
     const system = `你是一个视频混剪规划师。用户有一个视频素材库，你需要：
-1. 分析库里实际存在的素材内容
-2. 根据用户需求和库里有的内容，选择最合适的合成模板
-3. 生成专门针对这个库的镜头搜索槽位列表（不要用通用词，要用能在这个库里搜到东西的词）
+1. 仔细阅读库里每个视频的镜头样本描述（sampleSummaries）
+2. 根据用户需求，选择最合适的合成模板
+3. 生成专门针对这个库内容的搜索槽位 — 每条 query 必须用英文写成10-20词的具体视觉描述句
+
+Query 写作规则（非常重要）：
+- 使用真实的视觉描述，例如 "aerial view of Hong Kong skyscrapers at night with illuminated windows"
+- 直接借用库里样本描述中出现的词汇和场景，命中率更高
+- 禁止使用风格标签（cyberpunk, cinematic, bokeh）或消极描述（not indoors）
+- 如遇地名或运动项目，直接写进查询（"Paris Eiffel Tower aerial", "soccer player kicking ball on green field"）
 
 ${this.lang === 'en' ? 'Output the theme field in English.' : '主题 theme 字段用中文输出。'}
-只输出 JSON，格式如下：
+只输出原始 JSON（不要 markdown 代码块，不要任何说明）：
 {
   "theme": "视频主题（简短标题）",
   "compositionId": "选择的合成ID",
   "musicStyle": "英文音乐风格描述",
   "slots": [
-    { "query": "搜索词（针对这个库定制）", "mood": "calm|fast|slow|urban", "extra": {} },
+    { "query": "10-20 word English visual description", "mood": "calm|fast|slow|urban", "extra": {} },
     ...
   ]
 }
@@ -386,7 +408,7 @@ class HeuristicAgent implements AgentProvider {
   }
 
   async annotateClips(
-    clips: Array<{ summary: string; keyframePath?: string }>,
+    clips: Array<{ summary: string; keyframePath?: string; visualAnalysis?: string }>,
     compositionId: string,
   ): Promise<ClipAnnotation[]> {
     return clips.map(c => {

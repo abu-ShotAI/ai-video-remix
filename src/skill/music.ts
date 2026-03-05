@@ -46,31 +46,31 @@ export async function resolveMusic(
   console.log(`   🔍 搜索配乐: "${englishDesc}"`);
 
   // Use yt-dlp's built-in search (no API key needed)
-  // Output format: one video ID per line (--get-id), one title per line (--get-title)
+  // --print outputs one field per line; "%(id)s\t%(title)s" gives id TAB title per result
   let searchOut: string;
   try {
     searchOut = execFileSync('yt-dlp', [
       `ytsearch5:${englishDesc} no copyright background music`,
-      '--get-id',
-      '--get-title',
+      '--print', '%(id)s\t%(title)s',
+      '--no-download',
       '--no-playlist',
       '--quiet',
       '--no-warnings',
       '--cookies-from-browser', 'chrome',
-    ], { encoding: 'utf8', timeout: 30_000 });
+      '--remote-components', 'ejs:github',
+    ], { encoding: 'utf8', timeout: 60_000 });
   } catch (err) {
     throw new Error(`yt-dlp search failed: ${(err as Error).message}`);
   }
 
-  // yt-dlp outputs: title first, then id (per result)
   const lines = searchOut.trim().split('\n').filter(Boolean);
-  if (lines.length < 2) {
+  if (lines.length === 0) {
     throw new Error('yt-dlp returned no search results');
   }
 
   // Pick first result (highest relevance)
-  const title   = lines[0];
-  const videoId = lines[1];
+  const [videoId, ...titleParts] = lines[0].split('\t');
+  const title = titleParts.join('\t');
   console.log(`   🎵 自动选曲: ${title}  (${videoId})`);
 
   // ── Download ──────────────────────────────────────────────────────────────
@@ -90,7 +90,8 @@ export async function resolveMusic(
     '--quiet',
     '--no-warnings',
     '--cookies-from-browser', 'chrome',
-  ], { timeout: 120_000 });
+    '--remote-components', 'ejs:github',
+  ], { timeout: 300_000 });
 
   if (!fs.existsSync(destPath)) {
     throw new Error(`yt-dlp download succeeded but file not found: ${destPath}`);

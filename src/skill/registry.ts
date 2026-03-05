@@ -239,40 +239,19 @@ const switzerlandMeta: CompositionMeta = {
 
 // ─── SportsHighlight ─────────────────────────────────────────────────────────
 
-/**
- * MBAPPE VS. MESSI — 2018 FIFA World Cup R16: France 4-3 Argentina
- * Video ID: 1e893cf4-8ddc-4c88-acad-57244a55b37f
- *
- * Goals (chronological):
- *  13' Griezmann pen  → 1-0 FRA
- *  41' Di Maria       → 1-1
- *  48' Mercado        → 2-1 ARG
- *  57' Pavard volley  → 2-2
- *  59' Mbappé         → 3-2 FRA
- *  64' Mbappé         → 4-2 FRA
- *  90' Agüero         → 4-3 ARG
- *
- * Each slot targets one goal moment. The make script will filter by this videoId,
- * fetch multiple candidates around the goal, and sort final clips by startTime.
- */
-export const MBAPPE_MESSI_VIDEO_ID = '1e893cf4-8ddc-4c88-acad-57244a55b37f';
-export const MBAPPE_MESSI_VIDEO_PATH = '/Users/hangdong/Downloads/MBAPPE VS. MESSI ｜ 2018 FIFA World Cup： France v Argentina.mp4';
-
 const sportsMeta: CompositionMeta = {
   id:          'SportsHighlight',
-  label:       '法阿世界杯进球集锦',
-  description: 'ESPN风格足球进球集锦：快切 + 能量进度条 + 叙事字幕，完整呈现法国vs阿根廷2018世界杯全部进球',
+  label:       '运动高光时刻',
+  description: 'ESPN风格运动高光集锦：快切 + 能量进度条 + 叙事字幕，适合足球/篮球/任意运动的精彩时刻混剪',
   musicStyle:  'hiphop sports energy trap beat motivational intense',
-  // 7 goals in chronological order from France 4-3 Argentina, 2018 FIFA WC R16
-  // goalAt: video timestamp (seconds) confirmed by ShotAI scan of all goal moments
   shotSlots: [
-    { query: 'Griezmann penalty kick goal France Argentina 2018',  mood: 'fast', extra: { sport: 'football', caption: '1-0 ⚽ 格列兹曼 13\'', captionEn: "1-0 ⚽ Griezmann 13'", goalAt: 778 } },
-    { query: 'Di Maria long shot goal Argentina France',           mood: 'fast', extra: { sport: 'football', caption: '1-1 ⚽ 迪马利亚 41\'', captionEn: "1-1 ⚽ Di María 41'",  goalAt: 648 } },
-    { query: 'Mercado goal Argentina France score',                mood: 'fast', extra: { sport: 'football', caption: '2-1 ⚽ 梅卡多 48\'',  captionEn: "2-1 ⚽ Mercado 48'",   goalAt: 2858 } },
-    { query: 'Pavard volley goal France Argentina spectacular',    mood: 'fast', extra: { sport: 'football', caption: '2-2 ⚽ 帕瓦尔 57\'',  captionEn: "2-2 ⚽ Pavard 57'",    goalAt: 2956 } },
-    { query: 'Mbappe goal sprint France Argentina World Cup',      mood: 'fast', extra: { sport: 'football', caption: '3-2 ⚽ 姆巴佩 59\'',  captionEn: "3-2 ⚽ Mbappé 59'",    goalAt: 3718 } },
-    { query: 'Mbappe second goal France Argentina 64 minutes',     mood: 'fast', extra: { sport: 'football', caption: '4-2 ⚽ 姆巴佩 64\'',  captionEn: "4-2 ⚽ Mbappé 64'",    goalAt: 3884 } },
-    { query: 'Aguero goal Argentina France late consolation',      mood: 'fast', extra: { sport: 'football', caption: '4-3 ⚽ 阿圭罗 90\'',  captionEn: "4-3 ⚽ Agüero 90'",    goalAt: 5270 } },
+    { query: 'athlete sprinting fast action sport competition',        mood: 'fast', extra: { sport: 'sport' } },
+    { query: 'crowd fans cheering stadium celebration energy',         mood: 'fast', extra: { sport: 'sport' } },
+    { query: 'player scoring goal basketball football slam dunk',      mood: 'fast', extra: { sport: 'sport' } },
+    { query: 'team celebration victory moment group hug fist pump',   mood: 'fast', extra: { sport: 'sport' } },
+    { query: 'close-up athlete face intense focus determination',      mood: 'fast', extra: { sport: 'sport' } },
+    { query: 'dramatic tackle slide run sport action blur motion',     mood: 'fast', extra: { sport: 'sport' } },
+    { query: 'sport highlight key moment winning play slow motion',    mood: 'fast', extra: { sport: 'sport' } },
   ],
   buildProps(clips, title, bgm, showAttribution = true, lang = 'zh') {
     return {
@@ -280,7 +259,7 @@ const sportsMeta: CompositionMeta = {
       attribution: showAttribution ? (lang === 'en' ? 'ShotAI Search · Remotion Render' : 'ShotAI 检索 · Remotion 合成') : undefined,
       clips: clips.map(c => ({
         src: c.src, startTime: c.startTime, endTime: c.endTime, summary: c.summary,
-        sport: c.sport ?? 'football',
+        sport: c.sport ?? 'sport',
         caption: lang === 'en' ? (c.captionEn ?? c.caption ?? '') : (c.caption ?? ''),
         dramatic: c.dramatic ?? false,
         textBg: c.textBg ?? {},

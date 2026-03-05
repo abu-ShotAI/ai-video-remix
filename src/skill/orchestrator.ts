@@ -294,11 +294,30 @@ export async function runSkill(
 
   // ── 6. Agent: annotate clips with per-shot visual parameters ──────────────
   console.log('\n[6/8] 🎨 AI 分析镜头内容，生成特效注解...');
+
+  // First, gather visual analysis for each clip via ShotAI (Ollama multimodal)
+  const visualAnalyses: (string | undefined)[] = [];
+  for (let i = 0; i < resolvedClips.length; i++) {
+    const shot = pickedShots[i];
+    if (shot) {
+      try {
+        const analysis = await client.analyzeVisual(shot.id, '请简短描述这个镜头里实际发生的事情（不超过50字）。');
+        visualAnalyses.push(analysis);
+        console.log(`   👁  [${i+1}] ${analysis.slice(0, 60)}`);
+      } catch {
+        visualAnalyses.push(undefined);
+      }
+    } else {
+      visualAnalyses.push(undefined);
+    }
+  }
+
   const annotations: ClipAnnotation[] = await agent.annotateClips(
     resolvedClips.map((c, i) => ({
-      summary:      c.summary,
-      keyframePath: c.keyframePath as string | undefined,
-      slotExtra:    activeShotSlots[i]?.extra,
+      summary:        c.summary,
+      keyframePath:   c.keyframePath as string | undefined,
+      slotExtra:      activeShotSlots[i]?.extra,
+      visualAnalysis: visualAnalyses[i],
     })),
     meta.id,
   );

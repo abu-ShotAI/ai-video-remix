@@ -54,19 +54,19 @@ cp .env.example .env   # fill in SHOTAI_URL, SHOTAI_TOKEN, and optionally AGENT_
 ```
 
 ```bash
-# Travel vlog from your library
-npx tsx src/skill/cli.ts "make a travel vlog from my library"
+# Nature documentary (no LLM required)
+AGENT_PROVIDER=none npx tsx src/skill/cli.ts "自然野生动物纪录片" --composition NatureWild
 
-# Sports highlight reel
-npx tsx src/skill/cli.ts "create a sports highlight from last weekend"
+# Sports highlight reel (generic — works with any sport footage)
+npx tsx src/skill/cli.ts "世界杯足球精彩时刻混剪" --composition SportsHighlight
+
+# Travel vlog with English captions
+npx tsx src/skill/cli.ts "Japan and Paris travel highlights" --composition TravelVlog --lang en
 
 # Cyberpunk city night cuts
-npx tsx src/skill/cli.ts "cyberpunk city vibes, neon nights"
+npx tsx src/skill/cli.ts "香港赛博朋克夜景混剪" --composition CyberpunkCity
 
-# Nature documentary style
-npx tsx src/skill/cli.ts "BBC nature doc style with my wildlife footage"
-
-# With explicit composition + local music
+# With local music file
 npx tsx src/skill/cli.ts "scenic alpine journey" --composition SwitzerlandScenic --bgm ./music/alpine.mp3
 ```
 
@@ -98,6 +98,7 @@ npx tsx src/skill/cli.ts "<request>" [options]
 Options:
   --composition <id>   Force a specific composition (skip LLM selection)
   --bgm <path>         Local MP3 path (skip YouTube search)
+  --lang <zh|en>       Caption language — zh (default) or en
   --output <dir>       Output directory (default: ./output)
   --probe              Scan library first; LLM plans slots from actual content
 ```
@@ -237,10 +238,12 @@ An 80ms head/tail trim is applied automatically (`TRIM = 0.08`). If it persists,
 ### Music download fails
 
 ```bash
-pip install -U yt-dlp          # update yt-dlp
+pip install -U yt-dlp          # update yt-dlp (requires 2026.03.03+)
 # or use a local file:
 npx tsx src/skill/cli.ts "..." --bgm /path/to/music.mp3
 ```
+
+If yt-dlp reports `n challenge solving failed`, it needs the EJS remote solver. This is handled automatically with `--remote-components ejs:github` (already set in the code).
 
 ---
 
