@@ -302,14 +302,22 @@ export async function runSkill(
   for (let i = 0; i < resolvedClips.length; i++) {
     const shot = shotsForClips[i];
     if (shot) {
-      try {
-        const analysis = await client.analyzeVisual(shot.id, '请简短描述这个镜头里实际发生的事情（不超过50字）。');
-        visualAnalyses.push(analysis);
-        console.log(`   👁  [${i+1}] ${analysis.slice(0, 60)}`);
-      } catch (e) {
-        console.warn(`   ⚠  [${i+1}] analyzeVisual failed: ${(e as Error).message?.slice(0, 80)}`);
-        visualAnalyses.push(undefined);
+      let analysis: string | undefined;
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          analysis = await client.analyzeVisual(shot.id, '请简短描述这个镜头里实际发生的事情（不超过50字）。');
+          break;
+        } catch (e) {
+          if (attempt === 2) {
+            console.warn(`   ⚠  [${i+1}] analyzeVisual failed: ${(e as Error).message?.slice(0, 80)}`);
+          } else {
+            // Brief pause before retry (Ollama cold-start)
+            await new Promise(r => setTimeout(r, 2000));
+          }
+        }
       }
+      visualAnalyses.push(analysis);
+      if (analysis) console.log(`   👁  [${i+1}] ${analysis.slice(0, 60)}`);
     } else {
       visualAnalyses.push(undefined);
     }
