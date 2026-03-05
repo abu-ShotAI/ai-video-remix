@@ -8,6 +8,14 @@ Generate styled video compositions from your local ShotAI video library using na
 
 ---
 
+## Demo
+
+> Hong Kong Cyberpunk Night — generated with ShotAI MCP + Remotion, no manual editing.
+
+[![Hong Kong Cyberpunk Night — AI Video Remix](https://img.youtube.com/vi/mibbqDf6uQY/maxresdefault.jpg)](https://www.youtube.com/watch?v=mibbqDf6uQY)
+
+---
+
 ## Use as a Claude Skill
 
 This repo ships a ready-to-install [Claude Agent Skill](https://support.claude.com/en/articles/12512176-what-are-skills) in the [`skill/`](skill/) directory.

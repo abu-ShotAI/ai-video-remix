@@ -8,6 +8,14 @@
 
 ---
 
+## 效果演示
+
+> 香港赛博朋克夜景混剪 — 由 ShotAI MCP + Remotion 全自动生成，无需手动剪辑。
+
+[![香港赛博朋克夜景 — AI 智能混剪](https://img.youtube.com/vi/WRGx13fTNMU/maxresdefault.jpg)](https://www.youtube.com/watch?v=WRGx13fTNMU)
+
+---
+
 ## 作为 Claude Skill 使用
 
 本项目在 [`skill/`](skill/) 目录中内置了一个可直接安装的 [Claude Agent Skill](https://support.claude.com/en/articles/12512176-what-are-skills)。
