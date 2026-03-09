@@ -1,16 +1,18 @@
 # AI Video Remix
 
-> AI-driven video remix generator — semantic search + LLM planning + Remotion rendering.
+> AI-driven video remix generator — semantic video search + LLM planning + Remotion rendering.
+>
+> Requires [ShotAI](https://www.shotai.io) — local video asset management and footage search for Mac.
 >
 > 中文文档: [README.zh.md](README.zh.md)
 
-Generate styled video compositions from your local ShotAI video library using natural language.
+Generate styled video compositions from your local video footage library using natural language. [ShotAI](https://www.shotai.io) handles shot-level indexing and semantic search; this tool handles the planning, music, and rendering.
 
 ---
 
 ## Demo
 
-> Hong Kong Cyberpunk Night — generated with ShotAI MCP + Remotion, no manual editing.
+> Hong Kong Cyberpunk Night — generated from local video footage with ShotAI + Remotion, no manual editing.
 
 [![Hong Kong Cyberpunk Night — AI Video Remix](https://img.youtube.com/vi/mibbqDf6uQY/maxresdefault.jpg)](https://www.youtube.com/watch?v=mibbqDf6uQY)
 
@@ -38,15 +40,15 @@ Once installed, just describe what you want:
 
 | Tool | Purpose | Install |
 |------|---------|---------|
-| [ShotAI](https://www.shotai.io) | Local video asset management + semantic shot search (MCP server) | Download from website |
+| [ShotAI](https://www.shotai.io) | AI video asset management + semantic footage search — provides the MCP server this tool queries | [Download for Mac](https://www.shotai.io) |
 | ffmpeg | Clip extraction and keyframe analysis | `brew install ffmpeg` |
 | yt-dlp | Auto background music from YouTube | `brew install yt-dlp` |
 | Node.js 18+ | Runtime | `brew install node` |
 
 ### ShotAI Setup
 
-1. Download and open ShotAI, add your video files/folders to a collection
-2. Wait for indexing (shot detection + embeddings — takes a few minutes)
+1. Download and open [ShotAI](https://www.shotai.io), add your video footage folders to a collection
+2. Wait for indexing (shot detection + semantic embeddings — automatic, takes a few minutes for large libraries)
 3. **Settings → MCP Server → Enable**
 4. Note your **MCP URL** (default: `http://127.0.0.1:23817`) and **MCP Token**
 
@@ -82,13 +84,15 @@ npx tsx src/skill/cli.ts "scenic alpine journey" --composition SwitzerlandScenic
 
 ## Pipeline
 
+How AI Video Remix turns a text prompt into a finished video:
+
 ```
 User prompt
     │
     ▼
 1. parseIntent     — LLM extracts theme, selects composition, optionally overrides music style
 2. refineQueries   — LLM rewrites per-slot search terms to match library content
-3. pickShots       — ShotAI semantic search per slot; scored by similarity + duration + mood
+3. pickShots       — ShotAI semantic search across your video footage library; scored by similarity + duration + mood
 4. resolveMusic    — yt-dlp YouTube search+download, or local --bgm file
 5. extractClip     — ffmpeg trims each shot to an independent .mp4
 6. annotateClips   — LLM assigns per-clip visual params (tone, kenBurns, dramatic, caption)
